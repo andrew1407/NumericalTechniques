@@ -1,0 +1,3 @@
+#!/bin/bash
+clear;
+c++ $1-lab.cpp -o script; ./script; rm script
