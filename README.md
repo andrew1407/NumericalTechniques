@@ -6,14 +6,14 @@ A collection of standalone C++ programs implementing classic numerical methods, 
 
 | File | Method |
 | --- | --- |
-| `sripts/2-lab.cpp` | Seidel iteration method for systems of linear equations |
-| `sripts/3-lab.cpp` | Chord (secant) method for root finding |
-| `sripts/4.1-lab.cpp` | Simplified Newton method for nonlinear systems |
-| `sripts/4.2-lab.cpp` | Steepest descent method for nonlinear systems |
-| `sripts/5-lab.cpp` | Table function interpolation (divided and finite differences) |
-| `sripts/6-lab.cpp` | Table function approximation (least squares) |
-| `sripts/7-lab.cpp` | Numerical integration (trapezoidal and Simpson's rule) |
-| `sripts/8-lab.cpp` | ODE solving (fourth-order Runge-Kutta and Euler methods) |
+| [`sripts/2-lab.cpp`](sripts/2-lab.cpp) | Seidel iteration method for systems of linear equations |
+| [`sripts/3-lab.cpp`](sripts/3-lab.cpp) | Chord (secant) method for root finding |
+| [`sripts/4.1-lab.cpp`](sripts/4.1-lab.cpp) | Simplified Newton method for nonlinear systems |
+| [`sripts/4.2-lab.cpp`](sripts/4.2-lab.cpp) | Steepest descent method for nonlinear systems |
+| [`sripts/5-lab.cpp`](sripts/5-lab.cpp) | Table function interpolation (divided and finite differences) |
+| [`sripts/6-lab.cpp`](sripts/6-lab.cpp) | Table function approximation (least squares) |
+| [`sripts/7-lab.cpp`](sripts/7-lab.cpp) | Numerical integration (trapezoidal and Simpson's rule) |
+| [`sripts/8-lab.cpp`](sripts/8-lab.cpp) | ODE solving (fourth-order Runge-Kutta and Euler methods) |
 
 ## Tech Stack
 
@@ -30,7 +30,7 @@ c++ sripts/2-lab.cpp -o script
 ./script
 ```
 
-Alternatively, use the `lab` helper script in the `sripts` directory, which compiles the chosen lab, runs it, and removes the temporary binary. Pass the lab number (the part before `-lab.cpp`):
+Alternatively, use the [`lab`](sripts/lab) helper script in the [`sripts`](sripts) directory, which compiles the chosen lab, runs it, and removes the temporary binary. Pass the lab number (the part before `-lab.cpp`):
 
 ```bash
 cd sripts
