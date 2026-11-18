@@ -39,14 +39,14 @@ void SimpsonFn() {
   float res1 = (fn(A) + fn(A + n * h)) / 2;
   for (int i = 1; i < n; i++)
     res1 += fn(A + i * h) * ((i % 2) ? 2 : 1);
-  res1 *= h * 0.6667;
+  res1 *= h * 2 / 3;
     
   h *= 2;
   int m = n / 2;
   float res2 = (fn(A) + fn(A + m * h)) / 2;
   for (int i = 1; i < m; i++)
     res2 += fn(A + i * h) * ((i % 2) ? 2 : 1);
-  res2 *= h * 0.6667;
+  res2 *= h * 2 / 3;
 
   float del = abs((res1 - res2) / 15);
 

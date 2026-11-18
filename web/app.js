@@ -232,12 +232,6 @@ function gauss(A, b) {
   for (let i = n - 1; i >= 0; i--) { let v = M[i][n]; for (let k = i + 1; k < n; k++) v -= M[i][k] * x[k]; x[i] = v / M[i][i]; }
   return x;
 }
-// least squares fit y ≈ Σ c_j φ_j(x)
-function leastSquares(xs, ys, basis) {
-  const A = basis.map((f) => basis.map((g) => xs.reduce((s, x) => s + f(x) * g(x), 0)));
-  const b = basis.map((f) => xs.reduce((s, x, i) => s + f(x) * ys[i], 0));
-  return gauss(A, b);
-}
 const simpson = (f, a, b, n = 2000) => { const h = (b - a) / n; let s = f(a) + f(b); for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return (s * h) / 3; };
 
 // ---------------------------------------------------------------- parsing --
@@ -292,12 +286,8 @@ function newtonRoot() {
 const LABS = [
   {
     id: 'lab2', tab: '2', file: '2-lab.cpp', name: 'Seidel iteration',
-    intro: 'Solves a 4×4 linear system by iteration: each equation is divided by its diagonal element and rewritten as x<sub>i</sub> = Σ α<sub>ij</sub>x<sub>j</sub> + β<sub>i</sub>. The loop stops once the largest change between iterations falls below (1 − ‖α‖)/‖α‖ · ε, with ε = 0.001.',
+    intro: 'Solves a 4×4 linear system by iteration: each equation is divided by its diagonal element and rewritten as x<sub>i</sub> = Σ α<sub>ij</sub>x<sub>j</sub> + β<sub>i</sub>, and each sweep uses the x<sub>j</sub> already updated in it (Seidel). The loop stops once the largest change between iterations falls below (1 − ‖α‖)/‖α‖ · ε, with ε = 0.001.',
     globals: true,
-    bugs: [
-      'Each new x<sub>i</sub> is computed from x<sub>i</sub> alone. The inner loop multiplies every coefficient α<sub>ij</sub> by <code>X_prev[i]</code> instead of the other unknowns, so this is neither Seidel nor Jacobi iteration. It settles on a point that isn\'t the solution (compare the JS reference below).',
-      '<code>B[i] +=</code> sums into an uninitialised local array. WebAssembly\'s stack starts zeroed, as the native unoptimised build\'s does in practice, so the sums come out right. Compiled with <code>-O2</code>, the program loops forever.',
-    ],
     hint: 'The page writes the table into the program\'s global <code>float M[4][5]</code> before <code>main()</code> starts. Systems whose iteration diverges are cut off after 6000 printed lines.',
     run: (inp) => runWasm('2', { M: inp.M.flat() }),
     parse(lines) {
@@ -378,34 +368,24 @@ const LABS = [
   },
   {
     id: 'lab41', tab: '4.1', file: '4.1-lab.cpp', wasm: '4.1', name: 'Newton method',
-    intro: 'Solves the nonlinear system sin(x₁ + 1.5) − x₂ + 2.9 = 0, cos(x₂ − 2) + x₁ = 0 from (0, 4) with Newton steps x ← x − J⁻¹F(x), until the largest change is below ε = 10⁻⁶ or after 21 iterations.',
+    intro: 'Solves the nonlinear system sin(x₁ + 1.5) − x₂ + 2.9 = 0, cos(x₂ − 2) + x₁ = 0 from (0, 4) with simplified Newton steps x ← x − J⁻¹(x⁰)F(x), with the inverse Jacobian taken once at the starting point, until the largest change is below ε = 10⁻⁶ or after 21 iterations.',
     consts: ['X1 = 0', 'X2 = 4', 'eps = 1e-6', 'ITERATIONS = 20'],
-    bugs: [
-      'The Jacobian is filled in transposed (<code>J[1] = 1</code>, <code>J[2] = -1</code>; ∂F₁/∂x₂ is −1 and ∂F₂/∂x₁ is 1). <code>Jackobian_min1</code> then swaps the off-diagonal entries and divides by the determinant, which isn\'t the inverse ([d −b; −c a]/det). The steps aren\'t Newton steps, so the iterates run away until the iteration cap. The method is also not the "simplified" variant, because it recomputes the Jacobian every step.',
-    ],
     run: () => runWasm('4.1'),
     parse: (lines) => ({ its: parseIterations(lines) }),
     render: (d) => systemView(d),
   },
   {
     id: 'lab42', tab: '4.2', file: '4.2-lab.cpp', wasm: '4.2', name: 'Steepest descent',
-    intro: 'Minimises Φ(x) = F₁² + F₂² for the same system as lab 4.1, from (0, 4) with step a = 0.3, until the largest change is below ε = 10⁻⁶ or after 21 iterations.',
+    intro: 'Minimises Φ(x) = F₁² + F₂² for the same system as lab 4.1 by stepping against the gradient, x ← x − a·∇Φ(x), from (0, 4) with step a = 0.3, until the largest change is below ε = 10⁻⁶ or after 21 iterations.',
     consts: ['X1 = 0', 'X2 = 4', 'eps = 1e-6', 'a = 0.3', 'ITERATIONS = 20'],
-    bugs: [
-      'The loop replaces x with the gradient expressions themselves (<code>X[0] = ∂Φ/∂x₁</code>, then <code>X[1] = ∂Φ/∂x₂</code> using the already overwritten <code>X[0]</code>) instead of stepping x − a·∇Φ(x). The step <code>a</code> is declared but never used, and the expressions don\'t match the derivatives of Φ (for example −5.8·cos(x₁ + 1.5), where the derivative has +5.8). So the iterates grow until the iteration cap.',
-    ],
     run: () => runWasm('4.2'),
     parse: (lines) => ({ its: parseIterations(lines) }),
     render: (d) => systemView(d),
   },
   {
     id: 'lab5', tab: '5', file: '5-lab.cpp', name: 'Interpolation',
-    intro: 'Interpolates a five-point table with the Lagrange polynomial L(x) and the Newton polynomial N(x) built from divided differences, prints both polynomials and evaluates them at x = x₁ + x₂ (the second and third nodes).',
+    intro: 'Interpolates a five-point table with the Lagrange polynomial L(x) and the Newton polynomial N(x) built from divided differences, prints both polynomials and the finite differences of y, and evaluates them at x = x₁ + x₂ (the second and third nodes).',
     globals: true,
-    bugs: [
-      'The "finite differences" step prints the shifted nodes x<sub>i</sub> + k·h with h = 1/SIZE = 0.2, not differences of y.',
-      '<code>float res</code> in <code>LxFunction</code> isn\'t initialised before <code>res += …</code>. It happens to start at 0 in WebAssembly and in the native unoptimised build.',
-    ],
     hint: 'The page writes the table into the program\'s global <code>float X[5]</code> and <code>Y[5]</code> before <code>main()</code> starts. The curves are drawn from the polynomial coefficients the program prints.',
     run: (inp) => runWasm('5', { X: inp.X, Y: inp.Y }),
     parse(lines) {
@@ -433,19 +413,15 @@ const LABS = [
         <div class="section-h"><h2>Newton polynomial <small>· N(x) as printed</small></h2></div><div class="formula">${esc(d.N.map((t) => `${fmt(t.c, 6)}${t.roots.map((r) => `(x − ${r})`).join('')}`).join(' + '))}</div>
         <div class="two-col" style="margin-top:4px">
           ${table('Divided differences', ['order', ...range(5, (i) => `#${i}`)], d.div.map((r, k) => [k, ...range(k, () => ''), ...r]))}
-          ${table('"Finite differences"', ['row', ...range(5, (i) => `k = ${i}`)], d.fin.map((r, k) => [k, ...r]), { note: 'nodes + k·h, as printed' })}
+          ${table('Finite differences', ['order', ...range(5, (i) => `#${i}`)], d.fin.map((r, k) => [k, ...r]), { note: 'Δᵏy' })}
         </div>
         ${table('Lagrange basis', ['i', 'x_i', 'y_i', '1 / Π(x_i − x_j)', 'y_i / Π(x_i − x_j)'], d.P.map((t, i) => [i, inp.X[i], inp.Y[i], t.c, d.L[i]?.c]))}`;
     },
   },
   {
     id: 'lab6', tab: '6', file: '6-lab.cpp', name: 'Least squares',
-    intro: 'Approximates a nine-point table with two model functions, y = a/x² + b/x + c and y = a/x + b·eˣ + c. It prints the normal system of the least-squares method for each, then the sum of squared deviations S and δ = √S for the coefficients set in <code>main()</code>.',
-    consts: ['SIZE = 9', 'a1 = 0.1177, b1 = 1.7591, c1 = 1.681', 'a2 = −0.4091, b2 = −0.5904, c2 = 12.2568'],
-    bugs: [
-      '<code>main()</code> plugs in fixed coefficients instead of solving the normal systems it prints, so both fits are poor (S = 170 and 348). The dashed JS curves are the actual least-squares fits.',
-      '<code>func2Sys</code> adds <code>Y[i]</code> to <code>sumY</code> twice and adds both y·x and y/x to <code>sumYX</code>, so the printed system for function 2 is wrong too.',
-    ],
+    intro: 'Approximates a nine-point table with two model functions, y = a/x² + b/x + c and y = a/x + b·eˣ + c. It prints the least-squares normal system for each, solves it by Cramer\'s rule, then prints the fitted function with its sum of squared deviations S and δ = √S.',
+    consts: ['SIZE = 9'],
     run: () => runWasm('6'),
     parse(lines) {
       const sys = (name) => section(lines, `${name} (normal system):`, ['Function']).filter((l) => l.includes('=')).map((l) => [...l.matchAll(/(-?\d+\.\d+)/g)].map((m) => +m[1]));
@@ -458,29 +434,19 @@ const LABS = [
     },
     render(d) {
       const B1 = [(x) => x ** -2, (x) => 1 / x, () => 1], B2 = [(x) => 1 / x, Math.exp, () => 1];
-      const ls1 = leastSquares(LAB6_X, LAB6_Y, B1), ls2 = leastSquares(LAB6_X, LAB6_Y, B2);
       const f = (B, c) => (x) => B.reduce((s, g, j) => s + c[j] * g(x), 0);
-      const S = (fx) => LAB6_X.reduce((s, x, i) => s + (fx(x) - LAB6_Y[i]) ** 2, 0);
-      const solved1 = gauss(d.sys1.map((r) => r.slice(0, 3)), d.sys1.map((r) => r[3]));
       const xs = linspace(0.2, 2.95, 220);
-      const lab1 = f(B1, [d.f1.a, d.f1.b, d.f1.c]), lab2 = f(B2, [d.f2.a, d.f2.b, d.f2.c]);
-      const card = (name, form, fl, ls, Sls, sysRows, solved) => `<div class="panel" style="margin:0;padding:14px"><h2 style="margin-bottom:8px">${name} <small>· ${form}</small></h2>
-        <div class="stats" style="margin-bottom:10px">${stat(fmt(fl.S, 4), 'S, lab coefficients', 'bad')}${stat(fmt(fl.del, 4), 'δ = √S')}${stat(fmt(Sls, 4), `S, least squares ${JS}`, 'good')}</div>
-        <div class="table-wrap"><table><thead><tr><th class="num"></th><th class="num">a</th><th class="num">b</th><th class="num">c</th></tr></thead><tbody>
-          <tr><td>lab (main)</td>${[fl.a, fl.b, fl.c].map((v) => `<td class="num">${fmt(v, 4)}</td>`).join('')}</tr>
-          ${solved ? `<tr><td>printed system solved ${JS}</td>${solved.map((v) => `<td class="num">${fmt(v, 4)}</td>`).join('')}</tr>` : ''}
-          <tr><td>least squares ${JS}</td>${ls.map((v) => `<td class="num">${fmt(v, 4)}</td>`).join('')}</tr></tbody></table></div>
-        ${table(`${name}: normal system`, ['row', '· a', '· b', '· c', '= rhs'], sysRows.map((r, i) => [i + 1, ...r]), { note: 'as printed' })}</div>`;
-      return `<div class="charts">${chart({ title: 'Model functions against the table', x: 'x', y: 'y', height: 300, view: { y: [-2, 12] }, series: [
+      const card = (name, form, fl, sysRows) => `<div class="panel" style="margin:0;padding:14px"><h2 style="margin-bottom:8px">${name} <small>· ${form}</small></h2>
+        <div class="stats" style="margin-bottom:10px">${stat(fmt(fl.a, 4), 'a')}${stat(fmt(fl.b, 4), 'b')}${stat(fmt(fl.c, 4), 'c')}${stat(fmt(fl.S, 4), 'S')}${stat(fmt(fl.del, 4), 'δ = √S')}</div>
+        ${table(`${name}: normal system`, ['row', '· a', '· b', '· c', '= rhs'], sysRows.map((r, i) => [i + 1, ...r]))}</div>`;
+      return `<div class="charts">${chart({ title: 'Fitted functions against the table', x: 'x', y: 'y', height: 300, series: [
           { name: 'table points', xs: LAB6_X, ys: LAB6_Y, color: '--c5', line: false, r: 4 },
-          { name: 'function 1 (lab)', xs, ys: xs.map(lab1), color: '--c1' },
-          { name: 'function 2 (lab)', xs, ys: xs.map(lab2), color: '--c2' },
-          { name: 'function 1, LS', ref: true, xs, ys: xs.map(f(B1, ls1)), color: '--c1', dash: true },
-          { name: 'function 2, LS', ref: true, xs, ys: xs.map(f(B2, ls2)), color: '--c2', dash: true },
-        ], note: 'The table is the <code>X</code>, <code>Y</code> arrays from the source. Function 1 shoots up near x = 0, so the default view is clipped; use Full range to see all of it.' })}</div>
+          { name: 'function 1', xs, ys: xs.map(f(B1, [d.f1.a, d.f1.b, d.f1.c])), color: '--c1' },
+          { name: 'function 2', xs, ys: xs.map(f(B2, [d.f2.a, d.f2.b, d.f2.c])), color: '--c2' },
+        ], note: 'The table is the <code>X</code>, <code>Y</code> arrays from the source; the curves use the coefficients the program prints.' })}</div>
         <div class="algo-cards" style="margin-top:16px">
-          ${card('Function 1', 'a/x² + b/x + c', d.f1, ls1, S(f(B1, ls1)), d.sys1, solved1)}
-          ${card('Function 2', 'a/x + b·eˣ + c', d.f2, ls2, S(f(B2, ls2)), d.sys2, null)}
+          ${card('Function 1', 'a/x² + b/x + c', d.f1, d.sys1)}
+          ${card('Function 2', 'a/x + b·eˣ + c', d.f2, d.sys2)}
         </div>`;
     },
   },
@@ -488,9 +454,6 @@ const LABS = [
     id: 'lab7', tab: '7', file: '7-lab.cpp', name: 'Integration',
     intro: 'Integrates f(x) = √(x + 1)·lg(x + 1) over [0.1, 1.1] with the trapezoid rule and Simpson\'s rule, each with step h = 0.125 (8 steps) and 2h, and estimates the error by Runge\'s rule: |I(h) − I(2h)|/3 for trapezoids and /15 for Simpson.',
     consts: ['A = 0.1', 'B = 1.1', 'h = 0.125', 'n = 8'],
-    bugs: [
-      'Simpson\'s rule multiplies by <code>h * 0.6667</code> instead of 2h/3. That shifts I(h) by about 1.3·10⁻⁵, far more than the 10⁻⁷ error estimate it prints (compare the JS integral).',
-    ],
     run: () => runWasm('7'),
     parse(lines) {
       const block = (name) => Object.fromEntries(section(lines, name, ['method:']).map(kv).filter(Boolean));
@@ -510,19 +473,13 @@ const LABS = [
             { name: 'integral', ref: true, xs: hs, ys: [exact, exact], color: '--c5', dash: true },
           ] })}
         </div>
-        ${table('Results', ['method', 'I(h), h = 0.125', 'I(2h), 2h = 0.25', 'error estimate', `|I(h) − integral| ${JS}`], r.map(([n, v]) => [n, v['I(h)'], v['I(2h)'], v['I-I^tp(h)'], Math.abs(v['I(h)'] - exact)]))}`;
+        ${table('Results', ['method', 'I(h), h = 0.125', 'I(2h), 2h = 0.25', 'error estimate'], r.map(([n, v]) => [n, v['I(h)'], v['I(2h)'], v['I-I^tp(h)']]))}`;
     },
   },
   {
     id: 'lab8', tab: '8', file: '8-lab.cpp', name: 'Runge–Kutta and Euler',
-    intro: 'Solves y′ = 0.5·(x + 1)·eˣ·y² − x·y, y(0) = 1 on [0, 2]. It first checks the step h = 0.1 by comparing one 2h step with two h steps (doubling h while they agree within ε = 10⁻⁴), then runs fourth-order Runge–Kutta and Euler, and compares RK with the exact solution.',
+    intro: 'Solves y′ = 0.5·(x + 1)·eˣ·y² − x·y, y(0) = 1 on [0, 2]. It first checks the step h = 0.1 by comparing one 2h step with two h steps (doubling h while they agree within ε = 10⁻⁴), then runs fourth-order Runge–Kutta and Euler, and compares RK with the exact solution at each step\'s end point x<sub>i</sub> + h.',
     consts: ['A = 0, B = 2', 'h = 0.1', 'eps = 1e-4', 'x0 = 0, y0 = 1'],
-    bugs: [
-      'The fourth Runge–Kutta stage uses x + h/2 instead of x + h.',
-      'Euler adds h·(the whole RK step result) instead of h·f(x, y).',
-      'The exact comparison pairs y(x<sub>i</sub>) with the RK value at x<sub>i</sub> + h.',
-      '<code>RK_Yvalues[20]</code> is written at index 20 on the last step (the float x loop runs 20 times), one past the end of the array.',
-    ],
     hint: 'The exact solution has a pole between x = 0.9 and 1.0, so every method blows up there and the output turns to inf and nan.',
     run: () => runWasm('8'),
     parse(lines) {
@@ -544,23 +501,23 @@ const LABS = [
       const rows = (b, k2, k3) => b.map((it) => [it.n, it.xi, it.yi, it[k2], it[k3]]);
       return `<div class="stats">${stat(fmt(h, 4), 'step h₀')}${stat(d.after.n, 'steps n')}${stat(fmt(d.after['|y2 - ~y2|'], 6), '|y₂ − ỹ₂| at h₀')}${stat(fmt(d.maxRk), 'RK max |y − ỹ|', 'bad')}${stat(fmt(d.maxEu), 'Euler max |y − ỹ|', 'bad')}${stat(fmt(d.maxEx), 'max |y − y_RK|', 'bad')}</div>
         <div class="charts">${chart({ title: 'Solutions', x: 'x', y: 'y', height: 300, view: { y: [-8, 10] }, series: [
-          { name: 'exact', xs: d.ex.map((it) => it.xi), ys: d.ex.map((it) => it.yi), color: '--c3', width: 2.4 },
+          { name: 'exact', xs: step(d.ex), ys: d.ex.map((it) => it.yi), color: '--c3', width: 2.4 },
           { name: 'Runge–Kutta', xs: step(d.rk), ys: d.rk.map((it) => it.yi), color: '--c1' },
           { name: 'Euler', xs: step(d.eu), ys: d.eu.map((it) => it.yi), color: '--c2' },
-        ], note: 'RK and Euler values are plotted at x<sub>i</sub> + h, the point each step reaches. The y axis is clipped to −8…10 by default; Full range shows the blow-up.' })}</div>
+        ], note: 'Every value is plotted at x<sub>i</sub> + h, the point each step reaches (the program prints x<sub>i</sub>, where the step starts). The y axis is clipped to −8…10 by default; Full range shows the blow-up.' })}</div>
         <div class="charts two" style="margin-top:16px">
           ${chart({ title: 'Step check: |y(2h) − ỹ(2h)|', x: 'x', y: 'difference', log: true, logToggle: true, series: [
             { name: 'Runge–Kutta', xs: d.rk.map((it) => it.xi), ys: d.rk.map((it) => it['|yi - ~yi|']), color: '--c1' },
             { name: 'Euler', xs: d.eu.map((it) => it.xi), ys: d.eu.map((it) => it['|yi - ~yi|']), color: '--c2' },
           ] })}
-          ${chart({ title: 'Error against the exact solution', x: 'x', y: '|y − y_RK|', log: true, logToggle: true, series: [{ name: '|y − y_RK|', xs: d.ex.map((it) => it.xi), ys: d.ex.map((it) => it['|yi - ~yi|']), color: '--c4' }] })}
+          ${chart({ title: 'Runge–Kutta error against the exact solution', x: 'x', y: '|y − y_RK|', log: true, logToggle: true, series: [{ name: '|y − y_RK|', xs: step(d.ex), ys: d.ex.map((it) => it['|yi - ~yi|']), color: '--c4' }] })}
         </div>
         <div data-copyable data-title="Iterations" style="margin-top:4px"><div class="section-h"><h2>Iterations</h2>${actions('table')}</div>
           <div class="tabs" data-tabs>${['Runge–Kutta', 'Euler', 'Exact', 'Step search'].map((t, i) => `<button type="button" class="tab" data-tab="${i}" aria-selected="${i === 0}">${t}</button>`).join('')}</div>
           ${[
             [['#', 'x_i', 'y_i', '~y_i', '|y_i − ~y_i|'], rows(d.rk, '~yi', '|yi - ~yi|')],
             [['#', 'x_i', 'y_i', '~y_i', '|y_i − ~y_i|'], rows(d.eu, '~yi', '|yi - ~yi|')],
-            [['#', 'x_i', 'y_i exact', 'y_i RK', '|y_i − y_RK|'], rows(d.ex, 'yi_RK', '|yi - ~yi|')],
+            [['#', 'x_i', 'y(x_i + h) exact', 'y_i RK', '|y − y_RK|'], rows(d.ex, 'yi_RK', '|yi - ~yi|')],
             [['pass', 'y₁', 'y₂', '~y₂', '|y₂ − ~y₂|', 'h₀'], [...d.search.map((s, i) => [i + 1, s.y1, s.y2, s['~y2'], s['|y2 - ~y2|'], s.h0]), ['after', d.after.y1, d.after.y2, d.after['~y2'], d.after['|y2 - ~y2|'], h]]],
           ].map(([head, body], i) => `<div class="table-wrap" data-pane="${i}"${i ? ' hidden' : ''}><table><thead><tr>${head.map((x) => `<th class="num">${x}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td class="num">${typeof c === 'number' ? fmt(c, 6) : c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`).join('')}
         </div>`;
@@ -766,7 +723,6 @@ function build() {
     sec.className = 'panel'; sec.id = `panel-${lab.id}`; sec.role = 'tabpanel'; sec.hidden = true;
     sec.innerHTML = `<div class="lab-head"><span class="lang cpp">C++ → Wasm</span><h3>Lab ${lab.tab}: ${esc(lab.name)}</h3><a href="${SRC}/${lab.file}" target="_blank" rel="noopener">View source</a></div>
       <p class="intro">${lab.intro}</p>
-      ${lab.bugs ? `<ul class="bugs">${lab.bugs.map((t) => `<li><b>Lab bug, kept as is:</b> ${t}</li>`).join('')}</ul>` : ''}
       <form class="params" novalidate>${inputsHtml(lab)}<div class="form-row"><button class="run" type="submit">Run</button>${lab.globals ? '<button class="ghost" type="button" data-reset-inputs>Reset to the lab\'s data</button>' : ''}</div></form>
       <p class="hint">${lab.globals ? lab.hint : `This lab reads no input: its data are compile-time constants, so Run re-runs the compiled program as is.${lab.hint ? ` ${lab.hint}` : ''}`}</p>
       <div class="out" style="margin-top:18px"></div>

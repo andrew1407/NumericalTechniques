@@ -18,16 +18,18 @@ void F(const float* X, float* F_x) {
 void Jackobian(const float* X, float* J_x) {
   const float x1 = X[0], x2 = X[1];
   J_x[0] = cosf(x1 + 1.5);
-  J_x[1] = 1;
-  J_x[2] = -1;
+  J_x[1] = -1;
+  J_x[2] = 1;
   J_x[3] = -sinf(x2 - 2);
 }
 
 void Jackobian_min1(float* J) {
   const float det = J[0] * J[3] - J[1] * J[2];
-  const float el = J[1];
-  J[1] = J[2];
-  J[2] = el;
+  const float el = J[0];
+  J[0] = J[3];
+  J[3] = el;
+  J[1] *= -1;
+  J[2] *= -1;
   for (int i = 0; i < SIZE; J[i++] /= det);
 }
 
@@ -48,12 +50,14 @@ int main() {
 
   printf("Interation 0:\n\tx1 = %f;\n\tx2 = %f;\n\tdelta = 0;\n", X[0], X[1]);
 
+  //simplified method: the inverse Jacobian is taken once, at the initial point
+  Jackobian(X, J);
+  Jackobian_min1(J);
+
   while (breakpoint) {     
     X_prev[0] = X[0];
     X_prev[1] = X[1];
     F(X, F_x);
-    Jackobian(X, J);
-    Jackobian_min1(J);
     X[0] = X_prev[0] - (J[0] * F_x[0] + J[1] * F_x[1]);
     X[1] = X_prev[1] - (J[2] * F_x[0] + J[3] * F_x[1]);
     delta = maxValue(X, X_prev);

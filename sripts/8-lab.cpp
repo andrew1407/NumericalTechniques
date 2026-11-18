@@ -12,7 +12,7 @@ private:
   float x = x0, y = y0, h0 = h;
 
   //other values;
-  float RK_Yvalues[20];
+  float RK_Yvalues[21];
 
   //methods |PRIVATE|
 
@@ -31,7 +31,7 @@ private:
     const float F1 = _fn(x, y);
     const float F2 = _fn(x + h * 0.5, y + h * 0.5 * F1);
     const float F3 = _fn(x + h * 0.5, y + h * 0.5 * F2);
-    const float F4 = _fn(x + h * 0.5, y + h * F3);
+    const float F4 = _fn(x + h, y + h * F3);
     float res = F1 + 2 * F2 + 2 * F3 + F4;
     res *= (h / 6);
     res += y;
@@ -114,8 +114,8 @@ public:
     float del, deltaMax = 0;
 
     for (float xi = A, i = 1; xi <= B; xi += h0, i++) {
-      yi += h0 * _Y_k(xi, h0, yi);
-      _yi += 2 * h0 * _Y_k(xi, h0, yi);
+      yi += h0 * _fn(xi, yi);
+      _yi += 2 * h0 * _fn(xi, yi);
       del = abs(yi - _yi);
       if (del > deltaMax) deltaMax = del;
 
@@ -135,7 +135,7 @@ public:
     float del, deltaMax = 0;
 
     for (float xi = A, i = 1; xi <= B; xi += h0, i++) {
-      yi = _fnExact(xi, yi);
+      yi = _fnExact(xi + h0, yi);
       yiKG = RK_Yvalues[(int)i];
       del = abs(yi - yiKG);
       if (del > deltaMax) deltaMax = del;

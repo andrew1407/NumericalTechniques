@@ -9,23 +9,26 @@ const int X1 = 0, X2 = 4;
 const float eps = pow(10, -6);
 const float a = 0.3;
 
-void F_x1(float* X) {
+//gradient of F1^2 + F2^2
+float F_x1(const float* X) {
   const float x1 = X[0], x2 = X[1];
   const float res = sinf((x1 * 2) + 3) - 2 * x2 * cosf(x1 + 1.5) 
-    - 5.8 * cosf(x1 + 1.5) + 2 * cosf(x2 - 2) + 2 * x1;
-  X[0] = res;
+    + 5.8 * cosf(x1 + 1.5) + 2 * cosf(x2 - 2) + 2 * x1;
+  return res;
 }
 
-void F_x2(float* X) {
+float F_x2(const float* X) {
   const float x1 = X[0], x2 = X[1];
-  const float res = 2 * sinf(x1 + 1.5) + 2 * x2 + 2.9 
+  const float res = -2 * sinf(x1 + 1.5) + 2 * x2 - 5.8 
     - sinf(2 * x2 - 4) - 2 * x1 * sin(x2 - 2);
-  X[1] = res;
+  return res;
 }
 
+//step against the gradient
 void F(float* X) {
-  F_x1(X);
-  F_x2(X);
+  const float g1 = F_x1(X), g2 = F_x2(X);
+  X[0] -= a * g1;
+  X[1] -= a * g2;
 }
 
 float maxValue(const float* x1, const float* x2) {

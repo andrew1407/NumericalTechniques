@@ -28,7 +28,7 @@ A collection of standalone C++ programs implementing classic numerical methods, 
 **[Open the labs in the browser](https://andrew1407.github.io/NumericalTechniques/)**. Every lab runs natively: each `sripts/*-lab.cpp` is compiled unchanged to WebAssembly with [Emscripten](https://emscripten.org), and the page runs its `main()` in a web worker, then turns what it prints into tables and interactive charts (zoom, log scale, series toggles). The raw console output is shown next to them, and every chart (PNG or CSV), table and output can be copied.
 
 - The labs read no input, so their constants stay as compiled. Labs 2 and 5 keep their data in mutable globals (`M`, and `X`, `Y`), so the page lets you edit the system or the table and writes it into the program's memory before `main()` starts.
-- Curves badged **JS** (the exact solution of the linear system, the root of the nonlinear system, real least-squares fits, a reference integral) are computed by the page for comparison. Where a lab has a bug, the page keeps its behaviour and notes the bug.
+- Curves badged **JS** (the exact solution of the linear system, the root of the nonlinear system, a reference integral) are computed by the page as an independent check.
 
 Run it locally (needs [emsdk](https://emscripten.org/docs/getting_started/downloads.html)):
 

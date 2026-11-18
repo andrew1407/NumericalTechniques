@@ -43,23 +43,22 @@ public:
 
   void GenerateFinDif() {
     const int len = SIZE - 1;
-    const float h = pow(SIZE, -1);
-    float X_dif[SIZE];
+    float Y_dif[SIZE];
+    for (int i = 0; i < SIZE; i++) Y_dif[i] = Y[i];
 
     printf("Finite differences:\n");
     for (int i = len; i >= 0; i--) {
-      for (int k = 0; k <= i; k++) {
-        X_dif[k] = X[len - i] + (h * k);
-        printf("%.4f  ", X_dif[k]);
-      }
+      for (int k = 0; k <= i; k++) printf("%.4f  ", Y_dif[k]);
       printf("\n");
+      //next order: dY[k] = Y[k + 1] - Y[k]
+      for (int k = 0; k < i; k++) Y_dif[k] = Y_dif[k + 1] - Y_dif[k];
     }
   }
 
   float LxFunction(const float& x) {
     float dif_PX[SIZE];
     float koefs_Px[SIZE];
-    float koef, res;
+    float koef, res = 0;
     String Px_strList[SIZE];
     String Lx_strList[SIZE];
     String p_str;

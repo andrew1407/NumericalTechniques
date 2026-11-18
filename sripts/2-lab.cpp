@@ -29,11 +29,8 @@ float maxNum(const float *x) {
 
 float maxDelta(const float *x1, const float *x2) {
   float x[SIZE];
-  float _x1, _x2;
   for (int i = 0; i < SIZE; i++) {
-    _x1 = (x1[i] > 0) ? x1[i] : -x1[i];
-    _x2 = (x2[i] > 0) ? x2[i] : -x2[i];
-    float el = _x1 - _x2;
+    float el = x1[i] - x2[i];
     x[i] = (el > 0) ? el : -el;
     printf("\tDelta x%d: %f\n", i+1, x[i]);
   }
@@ -57,7 +54,7 @@ void showX(char *str, const float *X) {
 int main() {
   float X_prev[SIZE];
   float X[SIZE];
-  float B[SIZE];
+  float B[SIZE] = { 0 };
   float coefficients[SIZE][SIZE];
 
   const float eps = 0.001;
@@ -107,9 +104,12 @@ int main() {
       X[i] = 0;
     }
         
+    //new values for x1..x(i-1), previous ones for x(i+1)..x4
     for (int i = 0; i < SIZE; i++) {
-      for (int u = 0; u < SIZE - 1; u++)
-        X[i] += X_prev[i] * coefficients[i][u];
+      for (int u = 0, k = 0; u < SIZE; u++) {
+        if (u == i) continue;
+        X[i] += ((u < i) ? X[u] : X_prev[u]) * coefficients[i][k++];
+      }
       X[i] += coefficients[i][SIZE - 1];
     }
 
