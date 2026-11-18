@@ -1,0 +1,49 @@
+name: Deploy showcase to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 7.0.0
+
+      # Compile every sripts/*-lab.cpp unchanged to an ES6 WebAssembly module in web/wasm/
+      - name: Build WebAssembly modules
+        run: bash web/build.sh
+
+      # Mirror the repo layout so the page can load ../sripts/*.cpp for its source view
+      - name: Assemble site
+        run: |
+          mkdir -p _site/web _site/sripts
+          cp web/*.html web/*.js web/*.svg _site/web/
+          cp -r web/wasm _site/web/
+          cp sripts/*.cpp _site/sripts/
+          echo '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./web/"><title>Numerical Techniques Labs</title><link rel="icon" href="./web/icon.svg"><a href="./web/">Open the showcase</a>' > _site/index.html
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,5 +1,13 @@
 # NumericalTechniques
 
+<p align="center">
+  <a href="https://andrew1407.github.io/NumericalTechniques/" title="Open the labs in the browser">
+    <img src="web/icon.svg" alt="Numerical Techniques Labs" width="96" height="96">
+  </a>
+</p>
+
+[![pages deploy badge](https://github.com/andrew1407/NumericalTechniques/actions/workflows/pages.yml/badge.svg)](https://andrew1407.github.io/NumericalTechniques/)
+
 A collection of standalone C++ programs implementing classic numerical methods, organized as a series of self-contained lab exercises. Each program embeds its own input data and prints the iterations and results to the console.
 
 ## Methods Implemented
@@ -14,6 +22,22 @@ A collection of standalone C++ programs implementing classic numerical methods, 
 | [`sripts/6-lab.cpp`](sripts/6-lab.cpp) | Table function approximation (least squares) |
 | [`sripts/7-lab.cpp`](sripts/7-lab.cpp) | Numerical integration (trapezoidal and Simpson's rule) |
 | [`sripts/8-lab.cpp`](sripts/8-lab.cpp) | ODE solving (fourth-order Runge-Kutta and Euler methods) |
+
+## Showcase
+
+**[Open the labs in the browser](https://andrew1407.github.io/NumericalTechniques/)**. Every lab runs natively: each `sripts/*-lab.cpp` is compiled unchanged to WebAssembly with [Emscripten](https://emscripten.org), and the page runs its `main()` in a web worker, then turns what it prints into tables and interactive charts (zoom, log scale, series toggles). The raw console output is shown next to them, and every chart (PNG or CSV), table and output can be copied.
+
+- The labs read no input, so their constants stay as compiled. Labs 2 and 5 keep their data in mutable globals (`M`, and `X`, `Y`), so the page lets you edit the system or the table and writes it into the program's memory before `main()` starts.
+- Curves badged **JS** (the exact solution of the linear system, the root of the nonlinear system, real least-squares fits, a reference integral) are computed by the page for comparison. Where a lab has a bug, the page keeps its behaviour and notes the bug.
+
+Run it locally (needs [emsdk](https://emscripten.org/docs/getting_started/downloads.html)):
+
+```sh
+bash web/build.sh                                  # builds web/wasm/
+python -m http.server                              # then open http://localhost:8000/web/
+```
+
+The [pages workflow](.github/workflows/pages.yml) builds and deploys it on every push to `main`.
 
 ## Tech Stack
 
@@ -42,6 +66,8 @@ cd sripts
 ```
 .
 ├── .gitignore
+├── .github/workflows/pages.yml  # builds the WebAssembly modules and deploys the showcase
+├── web/               # in-browser showcase: index.html, app.js, worker.js, build.sh (emscripten)
 └── sripts/
     ├── lab            # bash helper: compiles, runs, and cleans up a lab
     ├── 2-lab.cpp      # Seidel iteration method
