@@ -318,7 +318,8 @@ const LABS = [
       const err = (x) => (ref ? Math.max(...x.map((v, j) => Math.abs(v - ref[j]))) : NaN);
       const n = d.its.length;
       const xsIt = [...iterCol(d.its), ...(d.final ? [n + 1] : [])];
-      const comp = (j) => [...d.its.map((it) => it.cur[j]), ...(d.final ? [d.final[j]] : [])];
+      const comps = range(4, (j) => [...d.its.map((it) => it.cur[j]), ...(d.final ? [d.final[j]] : [])]);
+      const comp = (j) => comps[j];
       const colors = ['--c1', '--c2', '--c3', '--c4'];
       return `<div class="stats">${stat(d.final ? n : `${n}+`, 'iterations')}${fin.map((v, j) => stat(fmt(v, 6), `x${j + 1}, lab result`)).join('')}${stat(fmt(d.its[0]?.stop, 6), 'stop threshold')}${stat(fmt(resid, 4), 'max |Ax − b| of the result', resid > 1e-3 ? 'bad' : 'good')}</div>
         ${ref ? `<div class="stats">${ref.map((v, j) => stat(fmt(v, 6), `x${j + 1}* ${JS} Gauss`)).join('')}${stat(fmt(err(fin), 4), `max |x − x*| ${JS}`, err(fin) > 1e-3 ? 'bad' : 'good')}</div>` : ''}
