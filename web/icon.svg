@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" data-badge="1">
-  <!-- A curve integrated with trapezoid strips under it, in the showcase's colours, on a round outlined badge -->
-  <circle cx="32" cy="32" r="30" fill="#ffffff" stroke="#3557d6" stroke-width="4"/>
+  <!-- A curve integrated with trapezoid strips under it, in the showcase's peach colours, on a round outlined badge -->
+  <circle cx="32" cy="32" r="30" fill="#ffffff" stroke="#ec7a4f" stroke-width="4"/>
   <svg x="12.75" y="12.75" width="38.5" height="38.5" viewBox="1.2 0.2 61.6 61.6">
     <g stroke-width="2.6" stroke-linejoin="round">
-    <path d="M13 56V38L24 29V56Z" fill="#d8ecfb" stroke="#4a90c8"/>
+    <path d="M13 56V38L24 29V56Z" fill="#ffe7da" stroke="#f4a27e"/>
     <path d="M24 56V29L35 26V56Z" fill="#fbf1cc" stroke="#b8971b"/>
-    <path d="M35 56V26L46 22V56Z" fill="#d8ecfb" stroke="#4a90c8"/>
-    <path d="M46 56V22L57 10V56Z" fill="#d8ecfb" stroke="#4a90c8"/>
+    <path d="M35 56V26L46 22V56Z" fill="#ffe7da" stroke="#f4a27e"/>
+    <path d="M46 56V22L57 10V56Z" fill="#ffe7da" stroke="#f4a27e"/>
     </g>
-    <path d="M6 47C7.2 45.5 10 41 13 38C16 35 20.3 31 24 29C27.7 27 31.3 27.2 35 26C38.7 24.8 42.3 24.7 46 22C49.7 19.3 55.2 12 57 10" fill="none" stroke="#3557d6" stroke-width="3" stroke-linecap="round"/>
-    <path d="M3 56H61M5 4V58" fill="none" stroke="#1f4f80" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M6 47C7.2 45.5 10 41 13 38C16 35 20.3 31 24 29C27.7 27 31.3 27.2 35 26C38.7 24.8 42.3 24.7 46 22C49.7 19.3 55.2 12 57 10" fill="none" stroke="#ec7a4f" stroke-width="3" stroke-linecap="round"/>
+    <path d="M3 56H61M5 4V58" fill="none" stroke="#9c4421" stroke-width="2.6" stroke-linecap="round"/>
     <g fill="#8a6d0b"><circle cx="24" cy="29" r="2.4"/><circle cx="35" cy="26" r="2.4"/></g>
   </svg>
 </svg>
