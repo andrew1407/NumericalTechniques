@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" data-badge="1">
   <!-- A curve integrated with trapezoid strips under it, in the showcase's colours, on a round outlined badge -->
-  <circle cx="32" cy="32" r="30.5" fill="#ffffff" stroke="#3557d6" stroke-width="3"/>
-  <svg x="12.5" y="12.5" width="39" height="39" viewBox="-1 -1 66 66">
+  <circle cx="32" cy="32" r="30" fill="#ffffff" stroke="#3557d6" stroke-width="4"/>
+  <svg x="12.75" y="12.75" width="38.5" height="38.5" viewBox="1.2 0.2 61.6 61.6">
     <g stroke-width="2.6" stroke-linejoin="round">
     <path d="M13 56V38L24 29V56Z" fill="#d8ecfb" stroke="#4a90c8"/>
     <path d="M24 56V29L35 26V56Z" fill="#fbf1cc" stroke="#b8971b"/>
